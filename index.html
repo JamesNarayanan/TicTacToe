@@ -1,0 +1,148 @@
+<html>
+	<head>
+		<title>TicTacToe</title>
+	</head>
+	<body>
+		<canvas id="myCanvas" width="600" height="600"></canvas>
+
+		<script>
+			var canvas = document.getElementById("myCanvas");
+			var ctx = canvas.getContext("2d");
+
+			var width = canvas.width;
+			var height = canvas.height;
+
+			var tileWidth = width/3;
+			var tileHeight = height/3;
+			var tiles = [];
+			for(var c = 0; c < 3; c++) {
+				tiles[c] = [];
+				for(var r = 0; r < 3; r++) {
+					tiles[c][r] = { x: tileWidth*c, y: tileHeight*r, status: 0, color: (c+r)%2==0 ? "red" : "blue" };
+				}
+			}
+
+			var imgX = new Image();
+			imgX.src = "x.svg";
+			var imgO = new Image();
+			imgO.src = "o.svg";
+
+			var turn = "x";
+
+			var req;
+
+			function drawTiles() {
+				for(var c = 0; c < 3; c++) {
+					for(var r = 0; r < 3; r++) {
+						var tile = tiles[c][r];
+						ctx.beginPath();
+						ctx.rect(tile.x, tile.y, tileWidth, tileHeight);
+						ctx.fillStyle = tile.color;
+						ctx.fill();
+						ctx.strokeStyle = "1px solid black";
+						ctx.stroke();
+						ctx.closePath();
+					}
+				}
+			}
+			function drawShapes() {
+				for(var c = 0; c < 3; c++) {
+					for(var r = 0; r < 3; r++) {
+						var tile = tiles[c][r];
+						if(tile.status != 0) {
+							ctx.beginPath();
+							ctx.drawImage(tile.status == "x" ? imgX : imgO, tile.x, tile.y);
+							ctx.closePath();
+						}
+					}
+				}
+			}
+			function draw() {
+				drawTiles();
+				drawShapes();
+				setTimeout(() => {
+					check();
+				}, 100);
+
+				req = requestAnimationFrame(draw);
+			}
+
+			function check() {
+				for(var col of tiles) { // Vertical wins
+					var allGood = true;
+					var checkTurn = col[0].status;
+					if(checkTurn == 0)
+						continue;
+					for(var tile of col) {
+						if(tile.status != checkTurn)
+							allGood = false;
+					}
+					if(allGood)
+						win(checkTurn);
+				}
+				for(var i = 0; i < 3; i++) { // Horizontal wins
+					var allGood = true;
+					var checkTurn = tiles[0][i].status;
+					if(checkTurn == 0)
+						continue;
+					for(var tile of getRow(tiles, i)) {
+						if(tile.status != checkTurn)
+							allGood = false;
+					}
+					if(allGood)
+						win(checkTurn);
+				}
+
+				var allGood = true;
+				var checkTurn = tiles[0][0].status;
+				if(checkTurn != 0) { // Top left to bottom right win
+					for(var i = 0; i < 3; i++) {
+						if(tiles[i][i].status != checkTurn)
+							allGood = false;
+					}
+					if(allGood)
+						win(checkTurn);
+				}
+
+				allGood = true;
+				checkTurn = tiles[0][2].status;
+				if(checkTurn != 0) { // Bottom left to top right win
+					for(var c = 0, r = 2; c < 3; c++, r--) {
+						if(tiles[c][r].status != checkTurn)
+							allGood = false;
+					}
+					if(allGood)
+						win(checkTurn);
+				}
+			}
+			function getRow(matrix, r){
+				var row = [];
+				for(var i = 0; i < matrix.length; i++){
+					row.push(matrix[i][r]);
+				}
+				return row;
+			}
+			function win(winTurn) {
+				console.log("Player " + winTurn + " wins!");
+				cancelAnimationFrame(req);
+				document.location.reload();
+			}
+
+			document.addEventListener("mousedown", handleClick, false);
+			function handleClick(e) {
+				var relativeX = e.clientX - canvas.offsetLeft;
+				var relativeY = e.clientY - canvas.offsetTop;
+				var tileCol = Math.floor(relativeX/tileWidth);
+				var tileRow = Math.floor(relativeY/tileHeight);
+
+				if(tiles[tileCol][tileRow].status == 0) {
+					tiles[tileCol][tileRow].status = turn;
+					// check();
+					turn = turn == "x" ? "o" : "x";
+				}
+			}
+
+			draw();
+		</script>
+	</body>
+</html>

@@ -292,6 +292,16 @@
 				}
 			}, false);
 
+			document.addEventListener("mousemove", function handleMouseMove(e) {
+				var relativeX = e.clientX - canvas.offsetLeft;
+				var relativeY = e.clientY - canvas.offsetTop;
+
+				if(gameState != "play" && relativeX >= button.x && relativeX <= button.x + button.width && relativeY >= button.y && relativeY <= button.y + button.height)
+					document.body.style.cursor = "pointer";
+				else
+					document.body.style.cursor = "default";
+			}, false);
+
 			document.addEventListener("keypress", function handleKeyPress(e) {
 				var key = e.key;
 				switch(parseInt(key)) {

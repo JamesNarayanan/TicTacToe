@@ -1,6 +1,16 @@
 <html>
 	<head>
 		<title>TicTacToe</title>
+		<style>
+			body {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+			#myCanvas {
+				box-shadow: 0 0 5px 2px #aaa;
+			}
+		</style>
 	</head>
 	<body>
 		<canvas id="myCanvas" width="600" height="600"></canvas>
@@ -45,8 +55,6 @@
 
 			var gameState = "play";
 
-			var animFrame;
-
 			var fontSize = 24;
 			var fontSizeUnit = "pt";
 			var fontFamily = " Courier";
@@ -59,8 +67,6 @@
 						ctx.rect(tile.x, tile.y, tileSize, tileSize);
 						ctx.fillStyle = tile.color;
 						ctx.fill();
-						// ctx.strokeStyle = "1px solid black";
-						// ctx.stroke();
 						ctx.closePath();
 					}
 				}
@@ -80,14 +86,73 @@
 			function draw() {
 				drawTiles();
 				drawShapes();
-				setTimeout(() => {
-					check();
-				}, 100);
-
-				animFrame = requestAnimationFrame(draw);
+				check();
 			}
 
 			function check() {
+				// Check for wins
+				var allGood;
+				var turnToCheck;
+				for(var col of tiles) { // Vertical wins
+					allGood = true;
+					turnToCheck = col[0].status;
+					if(turnToCheck == 0)
+						continue;
+					for(var tile of col) {
+						if(tile.status != turnToCheck)
+							allGood = false;
+					}
+					if(allGood) {
+						winTurn = turnToCheck;
+						wait(true);
+						return;
+					}
+				}
+				for(var i = 0; i < 3; i++) { // Horizontal wins
+					allGood = true;
+					turnToCheck = tiles[0][i].status;
+					if(turnToCheck == 0)
+						continue;
+					for(var tile of getRow(tiles, i)) {
+						if(tile.status != turnToCheck)
+							allGood = false;
+					}
+					if(allGood) {
+						winTurn = turnToCheck;
+						wait(true);
+						return;
+					}
+				}
+
+				allGood = true;
+				turnToCheck = tiles[0][0].status;
+				if(turnToCheck != 0) { // Top left to bottom right win
+					for(var i = 0; i < 3; i++) {
+						if(tiles[i][i].status != turnToCheck)
+							allGood = false;
+					}
+					if(allGood) {
+						winTurn = turnToCheck;
+						wait(true);
+						return;
+					}
+				}
+
+				allGood = true;
+				turnToCheck = tiles[0][2].status;
+				if(turnToCheck != 0) { // Bottom left to top right win
+					for(var c = 0, r = 2; c < 3; c++, r--) {
+						if(tiles[c][r].status != turnToCheck)
+							allGood = false;
+					}
+					if(allGood) {
+						winTurn = turnToCheck;
+						wait(true);
+						return;
+					}
+				}
+
+				// Check for ties
 				var allFull = true;
 				for(var col of tiles) {
 					for(var tile of col) {
@@ -103,63 +168,6 @@
 					wait(false);
 					return;
 				}
-
-				var allGood;
-				var turnToCheck;
-				for(var col of tiles) { // Vertical wins
-					allGood = true;
-					turnToCheck = col[0].status;
-					if(turnToCheck == 0)
-						continue;
-					for(var tile of col) {
-						if(tile.status != turnToCheck)
-							allGood = false;
-					}
-					if(allGood) {
-						winTurn = turnToCheck;
-						wait(true);
-					}
-				}
-				for(var i = 0; i < 3; i++) { // Horizontal wins
-					allGood = true;
-					turnToCheck = tiles[0][i].status;
-					if(turnToCheck == 0)
-						continue;
-					for(var tile of getRow(tiles, i)) {
-						if(tile.status != turnToCheck)
-							allGood = false;
-					}
-					if(allGood) {
-						winTurn = turnToCheck;
-						wait(true);
-					}
-				}
-
-				allGood = true;
-				turnToCheck = tiles[0][0].status;
-				if(turnToCheck != 0) { // Top left to bottom right win
-					for(var i = 0; i < 3; i++) {
-						if(tiles[i][i].status != turnToCheck)
-							allGood = false;
-					}
-					if(allGood) {
-						winTurn = turnToCheck;
-						wait(true);
-					}
-				}
-
-				allGood = true;
-				turnToCheck = tiles[0][2].status;
-				if(turnToCheck != 0) { // Bottom left to top right win
-					for(var c = 0, r = 2; c < 3; c++, r--) {
-						if(tiles[c][r].status != turnToCheck)
-							allGood = false;
-					}
-					if(allGood) {
-						winTurn = turnToCheck;
-						wait(true);
-					}
-				}
 			}
 			function getRow(matrix, r){
 				var row = [];
@@ -170,23 +178,15 @@
 			}
 			function wait(win) {
 				gameState = win ? "win" : "tie";
-				cancelAnimationFrame(animFrame);
 
-				if(win) {
+				if(win)
 					console.log("Player " + winTurn + " wins!");
-					
-					setTimeout(() => {
-						waitDisplay();
-					}, 500);
-				}
-				else {
+				else
 					console.log("It's a tie");
 
-					setTimeout(() => {
+				setTimeout(() => {
 						waitDisplay();
 					}, 500);
-				}
-				
 			}
 			function waitDisplay() {
 				ctx.beginPath();
@@ -228,8 +228,7 @@
 						tiles[c][r] = { x: tileSize*c, y: tileSize*r, status: 0, color: (c+r)%2==0 ? "red" : "blue" };
 					}
 				}
-
-				animFrame = requestAnimationFrame(draw);
+				draw();
 			}
 
 			document.addEventListener("mousedown", handleClick, false);
@@ -244,6 +243,7 @@
 					if(tiles[tileCol][tileRow].status == 0) {
 						tiles[tileCol][tileRow].status = turn;
 						turn = turn == "x" ? "o" : "x";
+						draw();
 					}
 				}
 				else {

@@ -13,7 +13,7 @@
 		</style>
 	</head>
 	<body>
-		<canvas id="myCanvas" width="600" height="600"></canvas>
+		<canvas id="myCanvas" width="900" height="600"></canvas>
 
 		<script>
 			var canvas = document.getElementById("myCanvas");
@@ -22,27 +22,35 @@
 			var width = canvas.width;
 			var height = canvas.height;
 
-			var tileSize = width/3;
+			var tileSize = height/3;
+
+			var scoreWindow = {
+				x: 0,
+				y: 0,
+				width: width/3,
+				height: height
+			};
+
 			var tiles = [];
 			for(var c = 0; c < 3; c++) {
 				tiles[c] = [];
 				for(var r = 0; r < 3; r++) {
-					tiles[c][r] = { x: tileSize*c, y: tileSize*r, status: 0, color: (c+r)%2==0 ? "red" : "blue" };
+					tiles[c][r] = { x: scoreWindow.width + tileSize*c, y: tileSize*r, status: 0, color: (c+r)%2==0 ? "red" : "blue" };
 				}
 			}
 
-			var waitFrame = {
-				x: (tileSize*3 - (tileSize*2)) / 2,
+			var waitWindow = {
+				x: scoreWindow.width + (tileSize*3 - (tileSize*2)) / 2,
 				y: (tileSize*3 - (tileSize*1.25)) / 2,
 				width: tileSize*2,
 				height: tileSize*1.25
 			}
 			
 			var button = {
-				x: waitFrame.x + (waitFrame.width - (waitFrame.width - 20)) / 2,
-				y: waitFrame.y + waitFrame.height - (waitFrame.height / 4) - 10,
-				width: waitFrame.width - 20,
-				height: waitFrame.height / 4
+				x: waitWindow.x + (waitWindow.width - (waitWindow.width - 20)) / 2,
+				y: waitWindow.y + waitWindow.height - (waitWindow.height / 4) - 10,
+				width: waitWindow.width - 20,
+				height: waitWindow.height / 4
 			};
 
 			var imgX = new Image();
@@ -59,14 +67,34 @@
 			var fontSizeUnit = "pt";
 			var fontFamily = " Courier";
 
+			var scoreX = 0;
+			var scoreO = 0;
+
+			function drawScore() {
+				ctx.beginPath();
+					ctx.rect(scoreWindow.x, scoreWindow.y, scoreWindow.width, scoreWindow.height);
+					ctx.fillStyle = "rgb(150,10,10)";
+					ctx.fill();
+				ctx.closePath();
+
+				ctx.beginPath();
+					ctx.font = ctx.font = fontSize + fontSizeUnit + fontFamily;
+					ctx.textAlign = "center";
+					ctx.textBaseline = "middle";
+					ctx.fillStyle = "black";
+					ctx.fillText(`Turn - ${turn}`, scoreWindow.width/2, scoreWindow.height/4)
+					ctx.fillText(`X Score ${scoreX}`, scoreWindow.width/2, scoreWindow.height/2);
+					ctx.fillText(`O Score ${scoreO}`, scoreWindow.width/2, scoreWindow.height/1.75);
+				ctx.closePath();
+			}
 			function drawTiles() {
 				for(var c = 0; c < 3; c++) {
 					for(var r = 0; r < 3; r++) {
 						var tile = tiles[c][r];
 						ctx.beginPath();
-						ctx.rect(tile.x, tile.y, tileSize, tileSize);
-						ctx.fillStyle = tile.color;
-						ctx.fill();
+							ctx.rect(tile.x, tile.y, tileSize, tileSize);
+							ctx.fillStyle = tile.color;
+							ctx.fill();
 						ctx.closePath();
 					}
 				}
@@ -84,6 +112,7 @@
 				}
 			}
 			function draw() {
+				drawScore();
 				drawTiles();
 				drawShapes();
 				check();
@@ -104,6 +133,8 @@
 					}
 					if(allGood) {
 						winTurn = turnToCheck;
+						if(winTurn=="x") scoreX++;
+						else scoreO++;
 						wait(true);
 						return;
 					}
@@ -119,6 +150,8 @@
 					}
 					if(allGood) {
 						winTurn = turnToCheck;
+						if(winTurn=="x") scoreX++;
+						else scoreO++;
 						wait(true);
 						return;
 					}
@@ -133,6 +166,8 @@
 					}
 					if(allGood) {
 						winTurn = turnToCheck;
+						if(winTurn=="x") scoreX++;
+						else scoreO++;
 						wait(true);
 						return;
 					}
@@ -147,6 +182,8 @@
 					}
 					if(allGood) {
 						winTurn = turnToCheck;
+						if(winTurn=="x") scoreX++;
+						else scoreO++;
 						wait(true);
 						return;
 					}
@@ -190,7 +227,7 @@
 			}
 			function waitDisplay() {
 				ctx.beginPath();
-					ctx.rect(waitFrame.x, waitFrame.y, waitFrame.width, waitFrame.height);
+					ctx.rect(waitWindow.x, waitWindow.y, waitWindow.width, waitWindow.height);
 					ctx.fillStyle = "white";
 					ctx.fill();
 					ctx.strokeStyle = `2px solid black`;
@@ -203,7 +240,7 @@
 					ctx.textAlign = "center";
 					ctx.textBaseline = "middle";
 					var text = gameState == "win" ? `Player ${winTurn} won!` : "It's a Tie :(";
-					ctx.fillText(text, waitFrame.x + waitFrame.width/2, waitFrame.y + (waitFrame.height - button.height)/2);
+					ctx.fillText(text, waitWindow.x + waitWindow.width/2, waitWindow.y + (waitWindow.height - button.height)/2);
 				ctx.closePath();
 
 				ctx.beginPath();
@@ -225,7 +262,7 @@
 				for(var c = 0; c < 3; c++) {
 					tiles[c] = [];
 					for(var r = 0; r < 3; r++) {
-						tiles[c][r] = { x: tileSize*c, y: tileSize*r, status: 0, color: (c+r)%2==0 ? "red" : "blue" };
+						tiles[c][r] = { x: scoreWindow.width + tileSize*c, y: tileSize*r, status: 0, color: (c+r)%2==0 ? "red" : "blue" };
 					}
 				}
 				draw();
@@ -235,8 +272,10 @@
 				var relativeX = e.clientX - canvas.offsetLeft;
 				var relativeY = e.clientY - canvas.offsetTop;
 
+				var relativeGameX = relativeX - scoreWindow.width;
+
 				if(gameState == "play"){
-					var tileCol = Math.floor(relativeX/tileSize);
+					var tileCol = Math.floor(relativeGameX/tileSize);
 					var tileRow = Math.floor(relativeY/tileSize);
 
 					if(tiles[tileCol][tileRow].status == 0) {

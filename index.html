@@ -16,59 +16,57 @@
 		<canvas id="myCanvas" width="900" height="600"></canvas>
 
 		<script>
-			var canvas = document.getElementById("myCanvas");
-			var ctx = canvas.getContext("2d");
+			const canvas = document.getElementById("myCanvas");
+			const ctx = canvas.getContext("2d");
 
-			var width = canvas.width;
-			var height = canvas.height;
+			const width = canvas.width;
+			const height = canvas.height;
 
-			var tileSize = height/3;
+			const tileSize = height/3;
 
-			var scoreWindow = {
+			const scoreWindow = {
 				x: 0,
 				y: 0,
 				width: width/3,
 				height: height
 			};
 
-			var tiles = [];
-			for(var c = 0; c < 3; c++) {
+			const tiles = [];
+			for(let c = 0; c < 3; c++) {
 				tiles[c] = [];
-				for(var r = 0; r < 3; r++) {
+				for(let r = 0; r < 3; r++) {
 					tiles[c][r] = { x: scoreWindow.width + tileSize*c, y: tileSize*r, status: 0, color: (c+r)%2==0 ? "red" : "blue" };
 				}
 			}
 
-			var waitWindow = {
+			const waitWindow = {
 				x: scoreWindow.width + (tileSize*3 - (tileSize*2)) / 2,
 				y: (tileSize*3 - (tileSize*1.25)) / 2,
 				width: tileSize*2,
 				height: tileSize*1.25
 			}
 			
-			var button = {
+			const button = {
 				x: waitWindow.x + (waitWindow.width - (waitWindow.width - 20)) / 2,
 				y: waitWindow.y + waitWindow.height - (waitWindow.height / 4) - 10,
 				width: waitWindow.width - 20,
 				height: waitWindow.height / 4
 			};
 
-			var imgX = new Image();
-			imgX.src = "x.svg";
-			var imgO = new Image();
-			imgO.src = "o.svg";
+			var img = { x: new Image(), o: new Image() };
+			img.x.src = "x.svg";
+			img.o.src = "o.svg";
 
 			var turn = "x";
 			var winTurn;
 
 			var gameState = "play";
 
-			var fontSize = 24;
-			var fontSizeUnit = "pt";
-			var fontFamily = " Courier";
+			const fontSize = 24;
+			const fontSizeUnit = "pt";
+			const fontFamily = " Courier";
 
-			var scoreX = 0;
-			var scoreO = 0;
+			var score = { x: 0, o: 0 };
 
 			function drawScore() {
 				ctx.beginPath();
@@ -83,14 +81,14 @@
 					ctx.textBaseline = "middle";
 					ctx.fillStyle = "black";
 					ctx.fillText(`Turn - ${turn}`, scoreWindow.width/2, scoreWindow.height/4)
-					ctx.fillText(`X Score ${scoreX}`, scoreWindow.width/2, scoreWindow.height/2);
-					ctx.fillText(`O Score ${scoreO}`, scoreWindow.width/2, scoreWindow.height/1.75);
+					ctx.fillText(`X Score ${score.x}`, scoreWindow.width/2, scoreWindow.height/2);
+					ctx.fillText(`O Score ${score.o}`, scoreWindow.width/2, scoreWindow.height/1.75);
 				ctx.closePath();
 			}
 			function drawTiles() {
-				for(var c = 0; c < 3; c++) {
-					for(var r = 0; r < 3; r++) {
-						var tile = tiles[c][r];
+				for(let c = 0; c < 3; c++) {
+					for(let r = 0; r < 3; r++) {
+						let tile = tiles[c][r];
 						ctx.beginPath();
 							ctx.rect(tile.x, tile.y, tileSize, tileSize);
 							ctx.fillStyle = tile.color;
@@ -100,14 +98,11 @@
 				}
 			}
 			function drawShapes() {
-				for(var c = 0; c < 3; c++) {
-					for(var r = 0; r < 3; r++) {
-						var tile = tiles[c][r];
-						if(tile.status != 0) {
-							ctx.beginPath();
-							ctx.drawImage(tile.status == "x" ? imgX : imgO, tile.x, tile.y);
-							ctx.closePath();
-						}
+				for(let c = 0; c < 3; c++) {
+					for(let r = 0; r < 3; r++) {
+						let tile = tiles[c][r];
+						if(tile.status != 0)
+							ctx.drawImage(img[tile.status], tile.x, tile.y);
 					}
 				}
 			}
@@ -120,38 +115,36 @@
 
 			function check() {
 				// Check for wins
-				var allGood;
-				var turnToCheck;
-				for(var col of tiles) { // Vertical wins
+				let allGood;
+				let turnToCheck;
+				for(let col of tiles) { // Vertical wins
 					allGood = true;
 					turnToCheck = col[0].status;
 					if(turnToCheck == 0)
 						continue;
-					for(var tile of col) {
+					for(let tile of col) {
 						if(tile.status != turnToCheck)
 							allGood = false;
 					}
 					if(allGood) {
 						winTurn = turnToCheck;
-						if(winTurn=="x") scoreX++;
-						else scoreO++;
+						score[winTurn]++;
 						wait(true);
 						return;
 					}
 				}
-				for(var i = 0; i < 3; i++) { // Horizontal wins
+				for(let i = 0; i < 3; i++) { // Horizontal wins
 					allGood = true;
 					turnToCheck = tiles[0][i].status;
 					if(turnToCheck == 0)
 						continue;
-					for(var tile of getRow(tiles, i)) {
+					for(let tile of getRow(tiles, i)) {
 						if(tile.status != turnToCheck)
 							allGood = false;
 					}
 					if(allGood) {
 						winTurn = turnToCheck;
-						if(winTurn=="x") scoreX++;
-						else scoreO++;
+						score[winTurn]++;
 						wait(true);
 						return;
 					}
@@ -160,14 +153,13 @@
 				allGood = true;
 				turnToCheck = tiles[0][0].status;
 				if(turnToCheck != 0) { // Top left to bottom right win
-					for(var i = 0; i < 3; i++) {
+					for(let i = 0; i < 3; i++) {
 						if(tiles[i][i].status != turnToCheck)
 							allGood = false;
 					}
 					if(allGood) {
 						winTurn = turnToCheck;
-						if(winTurn=="x") scoreX++;
-						else scoreO++;
+						score[winTurn]++;
 						wait(true);
 						return;
 					}
@@ -176,23 +168,22 @@
 				allGood = true;
 				turnToCheck = tiles[0][2].status;
 				if(turnToCheck != 0) { // Bottom left to top right win
-					for(var c = 0, r = 2; c < 3; c++, r--) {
+					for(let c = 0, r = 2; c < 3; c++, r--) {
 						if(tiles[c][r].status != turnToCheck)
 							allGood = false;
 					}
 					if(allGood) {
 						winTurn = turnToCheck;
-						if(winTurn=="x") scoreX++;
-						else scoreO++;
+						score[winTurn]++;
 						wait(true);
 						return;
 					}
 				}
 
 				// Check for ties
-				var allFull = true;
-				for(var col of tiles) {
-					for(var tile of col) {
+				let allFull = true;
+				for(let col of tiles) {
+					for(let tile of col) {
 						if(tile.status == 0) {
 							allFull = false;
 							break;
@@ -207,8 +198,8 @@
 				}
 			}
 			function getRow(matrix, r){
-				var row = [];
-				for(var i = 0; i < matrix.length; i++){
+				let row = [];
+				for(let i = 0; i < matrix.length; i++){
 					row.push(matrix[i][r]);
 				}
 				return row;
@@ -222,8 +213,8 @@
 					console.log("It's a tie");
 
 				setTimeout(() => {
-						waitDisplay();
-					}, 500);
+					waitDisplay();
+				}, 500);
 			}
 			function waitDisplay() {
 				ctx.beginPath();
@@ -259,9 +250,9 @@
 			}
 
 			function reset() {
-				for(var c = 0; c < 3; c++) {
+				for(let c = 0; c < 3; c++) {
 					tiles[c] = [];
-					for(var r = 0; r < 3; r++) {
+					for(let r = 0; r < 3; r++) {
 						tiles[c][r] = { x: scoreWindow.width + tileSize*c, y: tileSize*r, status: 0, color: (c+r)%2==0 ? "red" : "blue" };
 					}
 				}
@@ -269,14 +260,14 @@
 			}
 
 			document.addEventListener("mousedown", function handleClick(e) {
-				var relativeX = e.clientX - canvas.offsetLeft;
-				var relativeY = e.clientY - canvas.offsetTop;
+				let relativeX = e.clientX - canvas.offsetLeft;
+				let relativeY = e.clientY - canvas.offsetTop;
 
-				var relativeGameX = relativeX - scoreWindow.width;
+				let relativeGameX = relativeX - scoreWindow.width;
 
 				if(gameState == "play"){
-					var tileCol = Math.floor(relativeGameX/tileSize);
-					var tileRow = Math.floor(relativeY/tileSize);
+					let tileCol = Math.floor(relativeGameX/tileSize);
+					let tileRow = Math.floor(relativeY/tileSize);
 
 					if(tiles[tileCol][tileRow].status == 0) {
 						tiles[tileCol][tileRow].status = turn;
@@ -293,8 +284,8 @@
 			}, false);
 
 			document.addEventListener("mousemove", function handleMouseMove(e) {
-				var relativeX = e.clientX - canvas.offsetLeft;
-				var relativeY = e.clientY - canvas.offsetTop;
+				let relativeX = e.clientX - canvas.offsetLeft;
+				let relativeY = e.clientY - canvas.offsetTop;
 
 				if(gameState != "play" && relativeX >= button.x && relativeX <= button.x + button.width && relativeY >= button.y && relativeY <= button.y + button.height)
 					document.body.style.cursor = "pointer";
@@ -303,7 +294,7 @@
 			}, false);
 
 			document.addEventListener("keypress", function handleKeyPress(e) {
-				var key = e.key;
+				let key = e.key;
 				switch(parseInt(key)) {
 					case 1:
 						if(tiles[0][2].status == 0)
